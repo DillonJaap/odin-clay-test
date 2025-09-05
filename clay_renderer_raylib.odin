@@ -16,6 +16,18 @@ clay_color_to_rl_color :: proc(color: clay.Color) -> rl.Color {
 
 raylib_fonts := [dynamic]Raylib_Font{}
 
+loadFont :: proc(fontId: u16, fontSize: u16, path: cstring) {
+	assign_at(
+		&raylib_fonts,
+		fontId,
+		Raylib_Font {
+			font = rl.LoadFontEx(path, cast(i32)fontSize * 2, nil, 0),
+			fontId = cast(u16)fontId,
+		},
+	)
+	rl.SetTextureFilter(raylib_fonts[fontId].font.texture, rl.TextureFilter.TRILINEAR)
+}
+
 measure_text :: proc "c" (
 	text: clay.StringSlice,
 	config: ^clay.TextElementConfig,
