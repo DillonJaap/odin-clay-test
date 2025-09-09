@@ -196,6 +196,7 @@ create_layout :: proc(model: model) -> clay.ClayArray(clay.RenderCommand) {
 
 		}
 
+		search_item_list(model)
 
 		if clay.UI()(
 		{
@@ -204,7 +205,6 @@ create_layout :: proc(model: model) -> clay.ClayArray(clay.RenderCommand) {
 			backgroundColor = COLOR_LIGHT,
 		},
 		) {
-			search_item_list(model)
 		}
 	}
 
