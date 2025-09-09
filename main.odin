@@ -31,6 +31,7 @@ FONT_ID_BODY_24 :: 8
 model :: struct {
 	text_box:           [dynamic]rune,
 	debug_mode_enabled: bool,
+	files:              []string,
 }
 
 
@@ -39,16 +40,6 @@ profile_picture: raylib.Texture2D = {}
 main :: proc() {
 	error_handler :: proc "c" (errorData: clay.ErrorData) {
 		// Do something with the error data.
-	}
-
-	measure_text :: proc "c" (
-		text: clay.StringSlice,
-		config: ^clay.TextElementConfig,
-		userData: rawptr,
-	) -> clay.Dimensions {
-		// clay.TextElementConfig contains members such as fontId, fontSize, letterSpacing, etc..
-		// Note: clay.String->chars is not guaranteed to be null terminated
-		return {width = f32(text.length * i32(config.fontSize)), height = f32(config.fontSize)}
 	}
 
 	// Initialize clay
@@ -63,7 +54,7 @@ main :: proc() {
 	}
 
 	// Intitalize raylib window
-	raylib.SetConfigFlags({.VSYNC_HINT, .WINDOW_RESIZABLE, .MSAA_4X_HINT, .WINDOW_UNDECORATED})
+	raylib.SetConfigFlags({.VSYNC_HINT, .WINDOW_RESIZABLE, .WINDOW_UNDECORATED})
 	raylib.InitWindow(windowWidth, windowHeight, "Clay Practice")
 	raylib.SetTargetFPS(raylib.GetMonitorRefreshRate(0))
 
@@ -82,10 +73,11 @@ main :: proc() {
 	loadFont(FONT_ID_BODY_16, 16, "resources/Quicksand-Semibold.ttf")
 
 	model := model{}
+	model.files = find_files("/home/djaap/code")
 
 	// Render Loop
 	for !raylib.WindowShouldClose() {
-		defer free_all(context.temp_allocator)
+		//defer free_all(context.temp_allocator)
 
 		// handle input 
 		{
@@ -102,8 +94,8 @@ main :: proc() {
 					append(&model.text_box, ch)
 				}
 			}
-
 		}
+
 
 		// update clay stuff
 		{
@@ -123,7 +115,7 @@ main :: proc() {
 
 		// raylib rendering
 		{
-			renderCommands: clay.ClayArray(clay.RenderCommand) = create_layout(&model)
+			renderCommands: clay.ClayArray(clay.RenderCommand) = create_layout(model)
 
 			raylib.BeginDrawing()
 			clay_raylib_render(&renderCommands)
@@ -132,13 +124,23 @@ main :: proc() {
 	}
 }
 
-// Layout config is just a struct that can be declared statically, or inline
-item_layout := clay.LayoutConfig {
-	sizing = {width = clay.SizingGrow({}), height = clay.SizingFixed(50)},
+
+search_item_list :: proc(model: model) {
+	input := utf8.runes_to_string(model.text_box[:])
+	// files := fuzzy_old(input, dymodel.files, 5)
+
+
+	for file, i in model.files {
+		search_item(u32(i), file)
+	}
+
 }
 
-// Re-useable components are just normal procs.
-item_component :: proc(index: u32, input_text: string) {
+item_layout := clay.LayoutConfig {
+	sizing = {width = clay.SizingGrow({}), height = clay.SizingFixed(25)},
+}
+search_item :: proc(index: u32, input_text: string) {
+
 	if clay.UI()(
 	{id = clay.ID("SidebarBlob", index), layout = item_layout, backgroundColor = COLOR_ORANGE},
 	) {
@@ -146,8 +148,9 @@ item_component :: proc(index: u32, input_text: string) {
 	}
 }
 
+
 // An example function to create your layout tree
-create_layout :: proc(model: ^model) -> clay.ClayArray(clay.RenderCommand) {
+create_layout :: proc(model: model) -> clay.ClayArray(clay.RenderCommand) {
 	clay.BeginLayout()
 
 	if clay.UI()(
@@ -188,14 +191,9 @@ create_layout :: proc(model: ^model) -> clay.ClayArray(clay.RenderCommand) {
 
 			}
 
-			text_input := utf8.runes_to_string(model.text_box[:], context.temp_allocator)
+			text_input := utf8.runes_to_string(model.text_box[:])
 			text_box(text_input)
-		}
 
-		// Standard Odin code like loops, etc. work inside components.
-		// Here we render 5 sidebar items.
-		for i in u32(0) ..< 5 {
-			item_component(i, fmt.tprintf("Hello World %v", i))
 		}
 
 
@@ -205,7 +203,9 @@ create_layout :: proc(model: ^model) -> clay.ClayArray(clay.RenderCommand) {
 			layout = {sizing = {width = clay.SizingGrow({}), height = clay.SizingGrow({})}},
 			backgroundColor = COLOR_LIGHT,
 		},
-		) {}
+		) {
+			search_item_list(model)
+		}
 	}
 
 	return clay.EndLayout()
