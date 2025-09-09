@@ -20,7 +20,10 @@ find_files :: proc(search_dir: string) -> []string {
 		defer os2.close(w)
 
 		pr, err3 := os2.process_start(
-			{command = {`fd`, `--hidden`, `'^\.git$'`, `/home/djaap/code`}, stdout = w},
+			{
+				command = {`fd`, `--type`, `d`, `--hidden`, `^\.git$`, `/home/djaap/code`},
+				stdout = w,
+			},
 		)
 		if err3 != nil {
 			fmt.println(err3)

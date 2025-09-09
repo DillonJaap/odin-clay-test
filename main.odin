@@ -142,7 +142,7 @@ item_layout := clay.LayoutConfig {
 search_item :: proc(index: u32, input_text: string) {
 
 	if clay.UI()(
-	{id = clay.ID("SidebarBlob", index), layout = item_layout, backgroundColor = COLOR_ORANGE},
+	{id = clay.ID("search_item", index), layout = item_layout, backgroundColor = COLOR_ORANGE},
 	) {
 		clay.TextDynamic(input_text, clay.TextConfig({textColor = COLOR_BLACK, fontSize = 16}))
 	}
