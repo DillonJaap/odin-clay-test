@@ -127,7 +127,7 @@ main :: proc() {
 
 search_item_list :: proc(model: model) {
 	input := utf8.runes_to_string(model.text_box[:])
-	// files := fuzzy_old(input, dymodel.files, 5)
+	// files := fuzzy(input, dymodel.files, 5)
 
 
 	for file, i in model.files {
